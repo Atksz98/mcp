@@ -2,13 +2,25 @@ services:
   - type: web
     name: uk-gov-mcp
     runtime: docker
+    dockerfilePath: ./Dockerfile
     dockerCommand: node dist/http-server.js
+    plan: free
     envVars:
       - key: NODE_ENV
         value: production
-      - key: DATABASE_URL
-        value: sqlite:./standards.db
-      - key: DB_PATH
-        value: /app/standards.db
       - key: LOG_LEVEL
         value: info
+      - key: DB_PATH
+        value: /app/standards.db
+      - key: DATABASE_URL
+        value: sqlite:./standards.db
+      - key: HTTP_PORT
+        value: 3001
+      - key: MCP_PORT
+        value: 3000
+      - key: UPDATE_INTERVAL_HOURS
+        value: 24
+      - key: MAX_CONCURRENT_REQUESTS
+        value: 5
+      - key: PORT
+        value: 3001
