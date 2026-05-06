@@ -23,8 +23,6 @@ COPY . .
 
 # Build the application
 RUN npm run build
-RUN DATABASE_URL=sqlite:./standards.db node dist/scripts/setup.js || true
-RUN node dist/scripts/setup.js || true
 
 # Production stage
 FROM node:20-slim AS runtime
@@ -89,6 +87,9 @@ RUN npm ci --only=production && npm cache clean --force
 COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 COPY --from=builder --chown=nodejs:nodejs /app/src/database/schema.sql ./src/database/
 
+# Copy pre-built standards database (no runtime scraping needed)
+COPY --chown=nodejs:nodejs standards.db ./standards.db
+
 # Create directories for data persistence
 RUN mkdir -p /app/data /app/logs /app/models && \
     chown -R nodejs:nodejs /app
@@ -101,7 +102,7 @@ EXPOSE 3000 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => { process.exit(1) })"
+    CMD node -e "require('http').get('http://localhost:3001/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => { process.exit(1) })"
 
-# Default command (MCP server)
+# Start HTTP server
 CMD ["node", "dist/http-server.js"]
