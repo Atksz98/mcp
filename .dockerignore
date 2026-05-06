@@ -79,9 +79,6 @@ tmp/
 temp/
 
 # Database files (will be created in container)
-*.db
-*.db-shm
-*.db-wal
 
 # Models (will be downloaded in container if needed)
 models/
