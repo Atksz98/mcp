@@ -23,6 +23,8 @@ COPY . .
 
 # Build the application
 RUN npm run build
+RUN DATABASE_URL=sqlite:./standards.db node dist/scripts/setup.js || true
+RUN node dist/scripts/setup.js || true
 
 # Production stage
 FROM node:20-slim AS runtime
@@ -103,4 +105,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD node -e "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => { process.exit(1) })"
 
 # Default command (MCP server)
-CMD ["sh", "start.sh"]
+CMD ["node", "dist/http-server.js"]
