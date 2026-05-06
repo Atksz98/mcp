@@ -9,14 +9,15 @@ services:
     ports:
       - "3001:3001"
     volumes:
-      - ./data:/app/data
+      - ./standards.db:/app/standards.db
       - ./logs:/app/logs
       - ./models:/app/models
       - ./.env:/app/.env:ro
     environment:
       - NODE_ENV=production
       - LOG_LEVEL=info
-      - DB_PATH=/app/data/standards.db
+      - DB_PATH=/app/standards.db
+      - DATABASE_URL=sqlite:./standards.db
       - CHROMA_HOST=chromadb
       - CHROMA_PORT=8000
     depends_on:
@@ -43,10 +44,12 @@ services:
     user: root
     volumes:
       - ./standards.db:/app/standards.db
+      - ./logs:/app/logs
     environment:
       - NODE_ENV=production
       - LOG_LEVEL=info
       - DB_PATH=/app/standards.db
+      - DATABASE_URL=sqlite:./standards.db
       - CHROMA_HOST=chromadb
       - CHROMA_PORT=8000
     depends_on:
@@ -73,7 +76,7 @@ services:
     networks:
       - mcp-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v2/heartbeat"]
       interval: 30s
       timeout: 10s
       retries: 3
