@@ -88,7 +88,6 @@ RUN npm ci --only=production && npm cache clean --force
 # Copy built application from builder stage
 COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 COPY --from=builder --chown=nodejs:nodejs /app/src/database/schema.sql ./src/database/
-COPY --from=builder --chown=nodejs:nodejs /app/start.sh ./start.sh
 
 # Create directories for data persistence
 RUN mkdir -p /app/data /app/logs /app/models && \
