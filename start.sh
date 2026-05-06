@@ -10,31 +10,29 @@ SERVER_PID=$!
 # Wait for server to be ready
 sleep 5
 
-# Check if database needs setup
-DB_PATH=${DB_PATH:-/app/standards.db}
-DATABASE_URL=${DATABASE_URL:-sqlite:./standards.db}
-
 echo "📦 Checking database..."
 
-# Run setup in background if DB is empty
-node -e "
+# Check record count directly
+RECORD_COUNT=$(node -e "
 const Database = require('better-sqlite3');
 try {
-  const db = new Database('$DB_PATH');
-  const count = db.prepare('SELECT COUNT(*) as count FROM standards').get();
+  const db = new Database('./standards.db');
+  const row = db.prepare('SELECT COUNT(*) as count FROM standards').get();
   db.close();
-  process.exit(count.count > 0 ? 0 : 1);
+  console.log(row.count);
 } catch(e) {
-  process.exit(1);
+  console.log('0');
 }
-" 2>/dev/null
+" 2>/dev/null)
 
-if [ \$? -ne 0 ]; then
+echo "📊 Found $RECORD_COUNT records in database"
+
+if [ "$RECORD_COUNT" = "0" ] || [ -z "$RECORD_COUNT" ]; then
   echo "📥 Database empty — running setup in background..."
-  DATABASE_URL=$DATABASE_URL node dist/scripts/setup.js &
-  echo "⏳ Setup running in background, search available once complete..."
+  DATABASE_URL=sqlite:./standards.db node dist/scripts/setup.js &
+  echo "⏳ Setup running in background, search available once complete (~3 mins)..."
 else
-  echo "✅ Database already populated, skipping setup."
+  echo "✅ Database has $RECORD_COUNT records — skipping setup."
 fi
 
 # Keep the server process in foreground
