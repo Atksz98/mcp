@@ -27,4 +27,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/atksz98/uk-gov-mcp:latest
+          tags: ghcr.io/atksz98/mcp:latest
