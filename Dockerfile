@@ -14,13 +14,10 @@ RUN apt-get update && apt-get install -y \
 
 # Copy package files
 COPY package*.json ./
-
 # Install all dependencies (including dev dependencies for build)
 RUN npm ci && npm cache clean --force
-
 # Copy source code
 COPY . .
-
 # Build the application
 RUN npm run build
 
@@ -72,6 +69,9 @@ RUN apt-get update && apt-get install -y \
     && useradd --uid 1001 --gid nodejs --shell /bin/bash --create-home nodejs \
     && rm -rf /var/lib/apt/lists/*
 
+# Install supergateway globally as root
+RUN npm install -g supergateway
+
 # Set Puppeteer to use system Chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
@@ -86,7 +86,6 @@ RUN npm ci --only=production && npm cache clean --force
 # Copy built application from builder stage
 COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 COPY --from=builder --chown=nodejs:nodejs /app/src/database/schema.sql ./src/database/
-
 # Copy pre-built standards database (no runtime scraping needed)
 COPY --chown=nodejs:nodejs standards.db ./standards.db
 
@@ -98,11 +97,11 @@ RUN mkdir -p /app/data /app/logs /app/models && \
 USER nodejs
 
 # Expose ports
-EXPOSE 3000 8080
+EXPOSE 3000 3001
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3001/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => { process.exit(1) })"
+    CMD node -e "require('http').get('http://localhost:3001/', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => { process.exit(1) })"
 
 # Start HTTP server
-CMD ["node", "dist/http-server.js"]
+CMD ["sh", "-c", "node dist/http-server.js & supergateway --port 3000 --stdio 'node dist/index.js'"]
